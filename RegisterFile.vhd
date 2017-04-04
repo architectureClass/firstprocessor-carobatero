@@ -1,68 +1,69 @@
-----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
--- 
--- Create Date:    17:01:04 03/21/2017 
--- Design Name: 
--- Module Name:    RegisterFile - Behavioral 
--- Project Name: 
--- Target Devices: 
--- Tool versions: 
--- Description: 
---
--- Dependencies: 
---
--- Revision: 
--- Revision 0.01 - File Created
--- Additional Comments: 
---
-----------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.STD_LOGIC_arith.ALL;
-use IEEE.STD_LOGIC_unsigned.ALL;
+use IEEE.numeric_std.all;
+use IEEE.std_logic_unsigned.all;
+use std.textio.all;
 
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx primitives in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
-
-entity RegisterFile is
+entity RF is
     Port ( rs1 : in  STD_LOGIC_VECTOR (4 downto 0);
            rs2 : in  STD_LOGIC_VECTOR (4 downto 0);
            rd : in  STD_LOGIC_VECTOR (4 downto 0);
-           rst : in  STD_LOGIC;
-           DWR : in  STD_LOGIC_VECTOR (31 downto 0);
-           CRs1 : out  STD_LOGIC_VECTOR (31 downto 0);
-           CRs2 : out  STD_LOGIC_VECTOR (31 downto 0));
-end RegisterFile;
+			  dwr : in  STD_LOGIC_VECTOR (31 downto 0);
+			  reset : in STD_LOGIC ;
+           crs1 : out  STD_LOGIC_VECTOR (31 downto 0);
+           crs2 : out  STD_LOGIC_VECTOR (31 downto 0));
+end RF;
 
-architecture Behavioral of RegisterFile is
+architecture Behavioral of RF is
 
-type ram is array(31 downto 0) of std_logic_vector(31 downto 0);
-signal registers : ram := (others => "00000000000000000000000000000000");
+type reg is array (0 to 31) of std_logic_vector (31 downto 0);
+ 
+ impure function InitRomFromFile (RomFileName : in string) return instructions is
+	FILE RomFile : text open read_mode is RomFileName;
+	variable RomFileLine : line;
+	variable temp_bv : bit_vector(31 downto 0);
+	variable temp_mem : instructions;
+	begin
+		for I in instructions'range loop
+			readline (RomFile, RomFileLine);
+			read(RomFileLine, temp_bv);
+			temp_mem(i) := to_stdlogicvector(temp_bv);
+		end loop;
+	return temp_mem;
+end function;
+ 
+ 
+--signal myReg : reg :=(x"00000000", x"00000000", x"00000000", x"00000000",
+--					 	 x"00000001", x"00000002", x"00000003", x"00000000",
+--							 x"00000000", x"00000000", x"00000000", x"00000000",
+--							 x"00000000", x"00000000", x"00000011", x"FFFFFFF7",
+--							 x"0000000E", x"00000009", x"00000000", x"00000000",
+--							 x"00000008", x"00000000", x"00000000", x"00000000",
+--							 x"00000000", x"00000000", x"00000000", x"00000000",
+--							 x"00000000", x"00000000", x"00000000", x"00000000");
+
+signal myReg : reg := (others => x"00000000");
 
 begin
 
-	process(rst, rs1, rs2, rd, DWR)
-	begin
-		if(rst = '1') then
-			registers <= (others => "00000000000000000000000000000000");
-			CRs1 <= (others => '0');
-			CRs2 <= (others => '0');
-		else
-			if(rd /= "00000") then
-				registers(conv_integer(rd)) <= DWR;
+process(rs1,rs2,rd,dwr, reset)
+	begin 
+	
+		myReg(0) <= x"00000000";
+		
+		if reset = '0' then
+			if(rd/="00000")then
+				Myreg(conv_integer(rd)) <= dwr; 
 			end if;
-			CRs1 <= registers(conv_integer(rs1));
-			CRs2 <= registers(conv_integer(rs2)); 
+			crs1 <= Myreg(conv_integer(rs1));
+			crs2 <= Myreg(conv_integer(rs2));
+		else --inicializaciones
+			crs1 <= (others => '0');
+			crs2 <= (others => '0');
+	--		myReg(16) <= x"00000011";
+	--		myReg(17) <= x"FFFFFFF7";
+	--		myReg(18) <= x"0000000E";
 		end if;
 	end process;
 
-
 end Behavioral;
-
